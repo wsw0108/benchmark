@@ -5,9 +5,6 @@ from locust import HttpLocust, TaskSet, task
 
 DATABASE = "sdb"
 LAYER_ID = "country_point"
-TOTAL_COUNT = 3000000
-PAGE_SIZE = 200
-TOTAL_PAGE = TOTAL_COUNT/PAGE_SIZE
 
 
 jsonEncoder = JSONEncoder()
@@ -27,8 +24,13 @@ def check_response(response):
 class Query(TaskSet):
     @task
     def query_by_condition(self):
-        page = random.choice(xrange(TOTAL_PAGE))
-        data = "page=" + str(page) + "&" + "count=" + str(PAGE_SIZE)
+        samples = random.sample(xrange(1, 3000000), 200)
+        where = "gid in (" + ",".join(str(v) for v in samples) + ")"
+        data = {
+            "page": 0,
+            "count": 1000,
+            "condition": where
+        }
         with self.client.post(
                 "/rest/sdb/databases/%(db)s/layers/%(layerid)s/data?op=query" %
                 {"db": DATABASE, "layerid": LAYER_ID},
@@ -50,9 +52,12 @@ class Query(TaskSet):
                 ]]
             }
         }
-        crs = "WGS84"
-        data = "page=0&count=1000"
-        data += "&" + "spatialFilter=" + jsonEncoder.encode(spatial_filter) + "&" + "resultCRS=" + crs
+        data = {
+            "page": 0,
+            "count": 1000,
+            "resultCRS": "WGS84",
+            "spatialFilter": jsonEncoder.encode(spatial_filter)
+        }
         with self.client.post(
                 "/rest/sdb/databases/%(db)s/layers/%(layerid)s/data?op=query" %
                 {"db": DATABASE, "layerid": LAYER_ID},

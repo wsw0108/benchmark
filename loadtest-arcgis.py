@@ -28,7 +28,7 @@ class Query(TaskSet):
             "f": "json"
         }
         with self.client.post(
-                "/arcgis/rest/services/ChinaCountry/FeatureServer/0/query",
+                "/arcgis/rest/services/ChinaMap2012/FeatureServer/4/query",
                 data, catch_response=True,
                 name="query by condition") as response:
             check_response(response)
@@ -43,7 +43,7 @@ class Query(TaskSet):
             "f": "json"
         }
         with self.client.post(
-                "/arcgis/rest/services/ChinaCountry/FeatureServer/0/query",
+                "/arcgis/rest/services/ChinaMap2012/FeatureServer/4/query",
                 data, catch_response=True,
                 name="query by spatial") as response:
             check_response(response)
@@ -51,4 +51,4 @@ class Query(TaskSet):
 
 class QueryUser(HttpLocust):
     task_set = Query
-    host = "http://localhost:6080"
+    host = "http://arcgis-server:6080"

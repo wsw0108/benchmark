@@ -1,10 +1,14 @@
 import random
-from json import JSONDecoder
+import json
 
 from locust import HttpLocust, TaskSet, task
 
+NAME = "arcgis"
+TOTAL = 3000000
+LIMIT = 2000
 
-jsonDecoder = JSONDecoder()
+
+jsonDecoder = json.JSONDecoder()
 
 
 def check_response(response):
@@ -18,9 +22,10 @@ def check_response(response):
 
 
 class Query(TaskSet):
+
     @task
     def query_by_condition(self):
-        samples = random.sample(xrange(1, 3000000), 200)
+        samples = random.sample(xrange(1, TOTAL), LIMIT)
         where = "objectid in (" + ",".join(str(v) for v in samples) + ")"
         data = {
             "where": where,
@@ -29,23 +34,35 @@ class Query(TaskSet):
         }
         with self.client.post(
                 "/arcgis/rest/services/ChinaMap2012/FeatureServer/4/query",
-                data, catch_response=True,
-                name="query by condition") as response:
+                data,
+                catch_response=True,
+                name="(%s) query by condition" % NAME) as response:
             check_response(response)
 
     @task
     def query_by_spatial(self):
+        geometry = {
+            "rings": [[
+                [110.588, 32.575],
+                [112.492, 32.118],
+                [113.862, 31.166],
+                [113.234, 29.929],
+                [111.445, 30.290],
+                [110.170, 28.235]
+            ]]
+        }
         data = {
-            "geometry": "116.432,30.386,116.594,30.595",
-            "geometryType": "esriGeometryEnvelope",
+            "geometry": json.dumps(geometry),
+            "geometryType": "esriGeometryPolygon",
             "spatialRel": "esriSpatialRelIntersects",
             "outFields": "*",
             "f": "json"
         }
         with self.client.post(
                 "/arcgis/rest/services/ChinaMap2012/FeatureServer/4/query",
-                data, catch_response=True,
-                name="query by spatial") as response:
+                data,
+                catch_response=True,
+                name="(%s) query by spatial" % NAME) as response:
             check_response(response)
 
 

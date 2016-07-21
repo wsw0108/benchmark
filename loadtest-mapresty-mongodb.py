@@ -1,13 +1,18 @@
 import random
-from json import JSONEncoder, JSONDecoder
+import json
 
 from locust import HttpLocust, TaskSet, task
+
+NAME = "mapresty"
+TOTAL = 3000000
+LIMIT = 2000
 
 DATABASE = "sdbm"
 LAYER_ID = "country_point"
 
-jsonEncoder = JSONEncoder()
-jsonDecoder = JSONDecoder()
+
+jsonEncoder = json.JSONEncoder()
+jsonDecoder = json.JSONDecoder()
 
 
 def check_response(response):
@@ -21,19 +26,19 @@ def check_response(response):
 
 
 class Query(TaskSet):
+
     @task
     def query_by_condition(self):
-        samples = random.sample(xrange(1, 3000000), 200)
+        samples = random.sample(xrange(1, TOTAL), LIMIT)
         where = "{ objectid: { $in: [" + ",".join(str(v)
                                                   for v in samples) + "] } }"
-        data = {"page": 0, "count": 1000, "condition": where}
+        data = {"page": 0, "count": LIMIT, "condition": where}
         with self.client.post(
                 "/rest/sdb/databases/%(db)s/layers/%(layerid)s/data?op=query" %
-            {"db": DATABASE,
-             "layerid": LAYER_ID},
+                {"db": DATABASE, "layerid": LAYER_ID},
                 data,
                 catch_response=True,
-                name="query by condition") as response:
+                name="(%s) query by condition" % NAME) as response:
             check_response(response)
 
     @task
@@ -43,24 +48,27 @@ class Query(TaskSet):
             "geometry": {
                 "type": "Polygon",
                 "coordinates": [[
-                    [116.432, 30.386], [116.432, 30.595], [116.594, 30.595],
-                    [116.594, 30.386]
+                    [110.588, 32.575],
+                    [112.492, 32.118],
+                    [113.862, 31.166],
+                    [113.234, 29.929],
+                    [111.445, 30.290],
+                    [110.170, 28.235]
                 ]]
             }
         }
         data = {
             "page": 0,
-            "count": 1000,
+            "count": LIMIT,
             "resultCRS": "WGS84",
             "spatialFilter": jsonEncoder.encode(spatial_filter)
         }
         with self.client.post(
                 "/rest/sdb/databases/%(db)s/layers/%(layerid)s/data?op=query" %
-            {"db": DATABASE,
-             "layerid": LAYER_ID},
+                {"db": DATABASE, "layerid": LAYER_ID},
                 data,
                 catch_response=True,
-                name="query by spatial") as response:
+                name="(%s) query by spatial" % NAME) as response:
             check_response(response)
 
 

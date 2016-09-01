@@ -19,10 +19,22 @@
       <artifactId>jts</artifactId>
       <version>1.13</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jeo</groupId>
+      <artifactId>jeo</artifactId>
+      <version>0.7</version>
+    </dependency>
+    -->
+    <dependency>
+      <groupId>io.jeo</groupId>
+      <artifactId>jeo-geobuf</artifactId>
+      <version>0.7</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

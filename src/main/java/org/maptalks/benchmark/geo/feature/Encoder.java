@@ -5,12 +5,14 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ByteOrderValues;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
+import io.jeo.geobuf.GeobufWriter;
+import io.jeo.vector.MapFeature;
 import org.maptalks.benchmark.geo.GeoJSONReader;
-import org.maptalks.benchmark.geo.Geobuf;
 import org.maptalks.geojson.Feature;
 import org.maptalks.geojson.FeatureCollection;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 public class Encoder {
     public static byte[] encodeToSimple(FeatureCollection collection) throws Exception {
@@ -23,9 +25,13 @@ public class Encoder {
         byte[] buf = new byte[4];
 
         for (Feature feature : features) {
+            // id, not handled
+
+            // geometry
             Geometry geom = GeoJSONReader.read(feature.getGeometry());
             wkbWriter.write(geom, os);
 
+            // properties
             byte[] propsBytes = JSON.toJSONBytes(feature.getProperties());
             int propsBytesLen = propsBytes.length;
             ByteOrderValues.putInt(propsBytesLen, buf, ByteOrderValues.BIG_ENDIAN);
@@ -39,26 +45,28 @@ public class Encoder {
     public static byte[] encodeToGeoBuf(FeatureCollection collection) throws Exception {
         Feature[] features = collection.getFeatures();
 
-        Geobuf.Data.FeatureCollection.Builder featureCollectionBuilder = Geobuf.Data.FeatureCollection.newBuilder();
-        for (Feature feature : features) {
-            Geobuf.Data.Feature.Builder featureBuilder = Geobuf.Data.Feature.newBuilder();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+        GeobufWriter geobufWriter = new GeobufWriter(baos);
 
-            Object fid = feature.getId();
-            if (fid != null) {
-                featureBuilder.setId(fid.toString());
+        for (Feature feature : features) {
+            // id
+            MapFeature feat = new MapFeature(feature.getId().toString());
+
+            // geometry
+            Geometry geom = GeoJSONReader.read(feature.getGeometry());
+            // FIXIT: bug on put
+            feat.put(null, geom);
+
+            // properties
+            Map<String, Object> props = feature.getProperties();
+            for (Map.Entry<String, Object> entry : props.entrySet()) {
+                feat.put(entry.getKey(), entry.getValue());
             }
 
-            // TODO: set properties
-
-            Geobuf.Data.Geometry.Builder geometryBuilder = Geobuf.Data.Geometry.newBuilder();
-            geometryBuilder.setType(Geobuf.Data.Geometry.Type.valueOf(feature.getGeometry().getType()));
-            // TODO: set coords
-
-            featureBuilder.setGeometry(geometryBuilder);
-
-            featureCollectionBuilder.addFeatures(featureBuilder);
+            geobufWriter.write(feat);
+            // geobufWriter.append(feat);
         }
 
-        return featureCollectionBuilder.build().toByteArray();
+        return baos.toByteArray();
     }
 }

@@ -36,11 +36,21 @@ public class EncoderTest {
 
     @Test
     public void encodeToSimple() throws Exception {
-        Encoder.encodeToSimple(collection);
+        byte[] bytes = Encoder.encodeToSimple(collection);
+        System.out.println("simple: " + bytes.length);
+    }
+
+    //@Test
+    public void encodeToGeoBuf() throws Exception {
+        byte[] bytes = Encoder.encodeToGeoBuf(collection);
+        System.out.println("geobuf: " + bytes.length);
     }
 
     @Test
-    public void encodeToGeoBuf() throws Exception {
-        Encoder.encodeToGeoBuf(collection);
+    public void encodeToBson() throws Exception {
+        byte[] bytes = Encoder.encodeToBson(collection);
+        System.out.println("bson: " + bytes.length);
     }
+
 }
+

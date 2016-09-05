@@ -34,6 +34,7 @@ public class Encoder {
         for (Feature feature : features) {
             int size = 0; // fake feature size in byte
             ByteOrderValues.putInt(size, buf, ByteOrderValues.BIG_ENDIAN);
+            baos.write(buf);
 
             // id
             String fid = feature.getId().toString();
